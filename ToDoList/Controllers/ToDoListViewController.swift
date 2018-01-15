@@ -13,21 +13,27 @@ class ToDoListViewController: UITableViewController {
     var itemArray = [Item]()
     let itemListArrayKey = "ToDoItemListArray"
     var userDefaults = UserDefaults.standard
-    
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("ToDoItems.plist")
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Note: Either userDefaults.object() or userDefaults.array()
-        if let savedItems = userDefaults.array(forKey: itemListArrayKey) as? [Item] {
-            itemArray = savedItems
-        }
+//        // Note: Either userDefaults.object() or userDefaults.array()
+//        if let savedItems = userDefaults.array(forKey: itemListArrayKey) as? [Item] {
+//            itemArray = savedItems
+//        }
         
-        for i in 1...30 {
-            let newItem = Item()
-            newItem.title = String(i)
-            newItem.done = false
-            itemArray.append(newItem)
-        }
+        print(dataFilePath ?? "Data File Path not found!")
+        
+//        // Test Code
+//        for i in 1...5 {
+//            let newItem = Item()
+//            newItem.title = String(i)
+//            newItem.done = false
+//            itemArray.append(newItem)
+//        }
+        
+        loadItemsFromDataFile()
     }
 
     // MARK: - TableView Datasource methods
@@ -49,8 +55,8 @@ class ToDoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         tableView.reloadData()
-        
         tableView.deselectRow(at: indexPath, animated: true)
+        saveItemsToDataFile()
     }
     
     // MARK: Add new items
@@ -60,12 +66,12 @@ class ToDoListViewController: UITableViewController {
         let alertController = UIAlertController(title: "Add New To-Do Item", message: "", preferredStyle: .alert)
         let alertAction = UIAlertAction(title: "Add Item", style: .default) { (uiAlertAction) in
             
-            // Must use the "self" keyword in a closure
             let newItem = Item()
             newItem.title = newItemTextField.text ?? ""
+            // Must use the "self" keyword in a closure
             self.itemArray.append(newItem)
-            self.userDefaults.set(self.itemArray, forKey: self.itemListArrayKey)
             self.tableView.reloadData()
+            self.saveItemsToDataFile()
         }
         
         alertController.addTextField { (alertTextField) in
@@ -77,5 +83,26 @@ class ToDoListViewController: UITableViewController {
         present(alertController, animated: true, completion: nil)
     }
     
+    // MARK: Model manipulation methods
+    func saveItemsToDataFile() {
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+    }
+
+    func loadItemsFromDataFile() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding item array, \(error)")
+            }
+        }
+    }
 }
 
