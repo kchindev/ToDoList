@@ -12,14 +12,24 @@ import CoreData
 class ToDoListViewController: UITableViewController {
 
     var itemArray = [Item]()
+    
+    // Access the singleton, which is the shared property of the application to presist data using the
+    // "persistentContainer"
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    // Use "didSet" to specify what should happen when the variable "selectedCategory" gets set with a new value
+    var selectedCategory : Category? {
+        didSet {
+            loadItemsFromDatabase()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        loadItems()
+        //Moved to selectedCategory -> didSet above //loadItemsFromDatabase()
     }
 
     // MARK: - TableView Datasource methods
@@ -47,7 +57,7 @@ class ToDoListViewController: UITableViewController {
 
         tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
-        saveItemsToDataFile()
+        saveItemsToDatabase()
     }
     
     // MARK: Add new items
@@ -61,10 +71,11 @@ class ToDoListViewController: UITableViewController {
             let newItem = Item(context: self.context)
             newItem.title = newItemTextField.text ?? ""
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory
             // Must use the "self" keyword in a closure
             self.itemArray.append(newItem)
             self.tableView.reloadData()
-            self.saveItemsToDataFile()
+            self.saveItemsToDatabase()
         }
         
         alertController.addTextField { (alertTextField) in
@@ -77,7 +88,7 @@ class ToDoListViewController: UITableViewController {
     }
     
     // MARK: Model manipulation methods
-    func saveItemsToDataFile() {
+    func saveItemsToDatabase() {
         do {
             try context.save()
         } catch {
@@ -85,13 +96,23 @@ class ToDoListViewController: UITableViewController {
         }
     }
 
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItemsFromDatabase(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
         // Item.fetchRequest() is default value if one is not provided
         //let request : NSFetchRequest<Item> = Item.fetchRequest()
+    
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        // Using optional binding to handle 2 cases: (1) "predicate" == "not nil", (2) "predicate" == "nil"
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+        
         do {
             itemArray = try context.fetch(request)
         } catch {
-            print("Error fetching data from context \(error)")
+            print("Error fetching items from context \(error)")
         }
 
         tableView.reloadData()
@@ -99,6 +120,7 @@ class ToDoListViewController: UITableViewController {
 }
 
 // MARK: - Search bar methods
+// Use "extension" to separate out bits of functionality inside the ViewController
 extension ToDoListViewController : UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -107,17 +129,17 @@ extension ToDoListViewController : UISearchBarDelegate {
         // [cd] == case and diacritic insensitive
         // reference https://academy.realm.io/posts/nspredicate-cheatsheet/
         // reference http://nshipster.com/nspredicate/
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let itemsPredicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
 
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
-        loadItems(with: request)
+        loadItemsFromDatabase(with: request, predicate: itemsPredicate)
     }
 
     // When user cancels search
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
-            loadItems()
+            loadItemsFromDatabase()
             
             DispatchQueue.main.async { // Engage the main thread (UI)
                 searchBar.resignFirstResponder() // Dismiss keyboard
