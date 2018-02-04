@@ -82,6 +82,7 @@ class ToDoListViewController: SwipeTableViewController {
             if let cellBackgrounColor = UIColor(hexString: selectedCategory!.colorHexCode)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(itemArray!.count)) {
                 cell.backgroundColor = cellBackgrounColor
                 cell.textLabel?.textColor = ContrastColorOf(cellBackgrounColor, returnFlat: true)
+                cell.tintColor = ContrastColorOf(cellBackgrounColor, returnFlat: true) // Checkmark color
             }
             
             cell.accessoryType = item.done ? .checkmark : .none
