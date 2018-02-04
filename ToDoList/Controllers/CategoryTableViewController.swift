@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryTableViewController: SwipeTableViewController {
 
@@ -25,6 +26,8 @@ class CategoryTableViewController: SwipeTableViewController {
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
         
         loadCategoriesFromDatabase()
+        
+        tableView.separatorStyle = .none // Separator between cells.  None = no line between cells
     }
 
     // MARK: - TableView Datasource methods
@@ -36,8 +39,19 @@ class CategoryTableViewController: SwipeTableViewController {
 
         let cell = super.tableView(tableView, cellForRowAt: indexPath) // Tap into parent SwipeTableViewController
         
-        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet."
-
+        if let category = categoryArray?[indexPath.row] {
+            cell.textLabel?.text = category.name
+            
+            guard let categoryColor = UIColor(hexString: category.colorHexCode) else { fatalError("Category Color error!") }
+            
+            cell.backgroundColor = categoryColor
+            cell.textLabel?.textColor = ContrastColorOf(categoryColor, returnFlat: true)
+        }
+        
+//        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet."
+//
+//        cell.backgroundColor = UIColor(hexString: categoryArray?[indexPath.row].colorHexCode ?? "1D9BF6")
+        
         return cell
     }
     
@@ -97,6 +111,7 @@ class CategoryTableViewController: SwipeTableViewController {
             
             let newCategory = Category()
             newCategory.name = newCategoryTextField.text!
+            newCategory.colorHexCode = UIColor.randomFlat.hexValue()
             // Must use the "self" keyword in a closure
             self.saveItemsToDatabase(category: newCategory)
             self.tableView.reloadData()
@@ -114,3 +129,4 @@ class CategoryTableViewController: SwipeTableViewController {
     // MARK: - TableView Delegate methods
     
 }
+
