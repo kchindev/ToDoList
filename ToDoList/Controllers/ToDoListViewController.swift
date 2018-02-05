@@ -17,10 +17,6 @@ class ToDoListViewController: SwipeTableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
     
-    //    // Access the singleton, which is the shared property of the application to presist data using the
-//    // "persistentContainer"
-//    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    
     // Use "didSet" to specify what should happen when the variable "selectedCategory" gets set with a new value
     var selectedCategory : Category? {
         didSet {
@@ -54,16 +50,13 @@ class ToDoListViewController: SwipeTableViewController {
     func udpateNavBar(withHexCode colorHexCode: String) {
 
         guard let navBar = navigationController?.navigationBar else { fatalError("Navigation controller does not exist.") }
-
-//        if let navBar = navigationController?.navigationBar {
         
         guard let navBarColor = UIColor(hexString: colorHexCode) else { fatalError("Failed to get Nav Bar color") }
         
-            navBar.barTintColor = navBarColor
-            navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
-            navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor: ContrastColorOf(navBarColor, returnFlat: true)]
-            searchBar.barTintColor = navBarColor
-//        }
+        navBar.barTintColor = navBarColor
+        navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+        navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor: ContrastColorOf(navBarColor, returnFlat: true)]
+        searchBar.barTintColor = navBarColor
     }
     
     // MARK: - TableView Datasource methods

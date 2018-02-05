@@ -48,10 +48,6 @@ class CategoryTableViewController: SwipeTableViewController {
             cell.textLabel?.textColor = ContrastColorOf(categoryColor, returnFlat: true)
         }
         
-//        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet."
-//
-//        cell.backgroundColor = UIColor(hexString: categoryArray?[indexPath.row].colorHexCode ?? "1D9BF6")
-        
         return cell
     }
     
@@ -125,8 +121,4 @@ class CategoryTableViewController: SwipeTableViewController {
         alertController.addAction(alertAction)
         present(alertController, animated: true, completion: nil)
     }
-    
-    // MARK: - TableView Delegate methods
-    
 }
-
